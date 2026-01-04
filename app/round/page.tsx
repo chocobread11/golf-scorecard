@@ -13,7 +13,6 @@ export default function RoundPage() {
   
   // TIMING STATE
   const [startTime, setStartTime] = useState<number | null>(null);
-  const [endTime, setEndTime] = useState<number | null>(null);
 
   // SETUP STATE
   const [roundStarted, setRoundStarted] = useState(false);
@@ -160,8 +159,14 @@ export default function RoundPage() {
         <div className="pb-6 flex justify-between">
             <button
                 className="py-3 w-24 border rounded-md"
-                disabled={currentHole === 1}
-                onClick={() => setCurrentHole((h) => h - 1)}
+                onClick=
+              {() => {
+                    if (currentHole === 1) {
+                      setRoundStarted(false);
+                    } else {
+                      setCurrentHole((h) => h - 1);
+                    }
+                }}
             >
                 ← PREV
             </button>
@@ -177,23 +182,32 @@ export default function RoundPage() {
             <button
             className="py-3 w-24 border rounded-md"
             onClick={() => {
-                const end = Date.now();
-                    sessionStorage.setItem(
-                    "roundData",
-                    JSON.stringify({
-                        course,
-                        totalHoles,
-                        players: activePlayers,
-                        pars,
-                        scores,
-                        startTime: startTime ?? end, // fallback safety
-                        endTime: end,
-                    }));
-                window.location.href = "/summary";
-                }}
-            >
-            END 
-            </button>
+              const ok = window.confirm(
+                "End this round and go to summary?"
+              );
+
+              if (!ok) return;
+
+              const end = Date.now();
+
+              sessionStorage.setItem(
+                "roundData",
+                JSON.stringify({
+                  course,
+                  totalHoles,
+                  players: activePlayers,
+                  pars,
+                  scores,
+                  startTime: startTime ?? end, // fallback safety
+                  endTime: end,
+                })
+              );
+
+              window.location.href = "/summary";
+            }}
+          >
+            END
+          </button>
         )}
         </div>
 

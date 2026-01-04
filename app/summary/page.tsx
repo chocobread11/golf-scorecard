@@ -1,36 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toPng } from "html-to-image";
-import { useRef } from "react";
-
-
-type RoundData = {
-  course: string;
-  totalHoles: number;
-  players: string[];
-  pars: number[];
-  scores: number[][];
-  startTime: number;
-  endTime: number;
-};
-
-// Helper to format duration
-function formatDuration(ms: number) {
-  const totalMinutes = Math.floor(ms / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  return hours > 0
-    ? `${hours}h ${minutes}m`
-    : `${minutes}m`;
-}
-
+import { useRouter } from "next/navigation";
 
 export default function SummaryPage() {
   const [data, setData] = useState<RoundData | null>(null);
-
-  const scorecardRef = useRef<HTMLDivElement>(null);
+  const router = useRouter(); 
 
   useEffect(() => {
     const stored = sessionStorage.getItem("roundData");
@@ -53,13 +28,35 @@ export default function SummaryPage() {
 
   const parTotal = data.pars.reduce((a, b) => a + b, 0);
 
+  type RoundData = {
+  course: string;
+  totalHoles: number;
+  players: string[];
+  pars: number[];
+  scores: number[][];
+  startTime: number;
+  endTime: number;
+};
+
+// Helper to format duration
+function formatDuration(ms: number) {
+  const totalMinutes = Math.floor(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return hours > 0
+    ? `${hours}h ${minutes}m`
+    : `${minutes}m`;
+}
+
+
   return (
     <main className="min-h-screen px-6 py-4">
-      <h1 className="text-2xl font-semibold mb-4 text-center">Summary</h1>
-
+      <h1 className=" text-2xl font-semibold mb-2 text-center">Summary</h1>
+    
        <div>
         {/* ROUND INFO */}
-        <div className="border rounded-md p-4 mb-6">
+        <div className="p-4 mb-2">
             <p className="text-sm text-gray-500">Course</p>
             <p className="text-lg font-semibold">{data.course}</p>
 
@@ -81,7 +78,7 @@ export default function SummaryPage() {
         </div>
 
         {/* SCORES */}
-        <div className="border rounded-md p-4">
+        <div className="py-4 px-4">
             <p className="text-sm text-gray-500 mb-4">Scores</p>
 
             <div className="space-y-3">
@@ -104,26 +101,10 @@ export default function SummaryPage() {
       {/* ACTIONS */}
       <div className="space-y-4 mt-4">
         <button
-            className="w-full py-4 border rounded-md font-bold"
-            >
-            EXPORT FULL SCORECARD (notfunctional yet)
-        </button>
-
-
-        <button
-        className="w-full py-4 text-red-600 border rounded-md"
-        onClick={() => {
-            const ok = window.confirm(
-            "Delete this round and reset all scores?"
-            );
-
-            if (!ok) return;
-
-            sessionStorage.removeItem("roundData");
-            window.location.href = "/";
-        }}
+          className="w-full py-4 border rounded-md font-bold"
+          onClick={() => router.push("/fullScore")}
         >
-        DELETE ROUND & RESET
+          VIEW FULL SCORECARD
         </button>
       </div>
     </main>
