@@ -3,9 +3,9 @@
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from '@/lib/supabase';
 
 export default function RoundPage() {
-  //BACK BUTTON NAV
   const router = useRouter();
 
   const searchParams = useSearchParams();
@@ -181,7 +181,7 @@ export default function RoundPage() {
         ) : (
             <button
             className="py-3 w-24 border rounded-md"
-            onClick={() => {
+            onClick={async () => {
               const ok = window.confirm(
                 "End this round and go to summary?"
               );
@@ -203,7 +203,56 @@ export default function RoundPage() {
                 })
               );
 
-              window.location.href = "/summary";
+              const {
+                  data: { user },
+                } = await supabase.auth.getUser();
+
+                if (!user) {
+                  alert("Please sign in to save your round");
+                  return;
+                }
+
+                const { data: round, error } = await supabase
+                .from("rounds")
+                .insert({
+                  user_id: user.id,
+                  course_name: course,
+                  total_holes: totalHoles,
+                  start_time: new Date(startTime!).toISOString(),
+                  end_time: new Date(end).toISOString(),
+                })
+                .select()
+                .single();
+
+                if (error?.code === "23505") {
+                  console.log("Duplicate round prevented");
+                }
+
+                if (error || !round) {
+                  console.error("Round insert error:", error);
+                  alert("Failed to save round");
+                  return;
+                }
+
+                const rows:any[] = [];
+
+                scores.forEach((holeScores, h) => {
+                  holeScores.forEach((s, i) => {
+                    if (s !== null) {
+                      rows.push({
+                        round_id: round.id,
+                        hole_number: h + 1,
+                        par: pars[h],
+                        golfer_name: players[i],
+                        strokes: s,
+                      });
+                    }
+                  });
+                });
+
+                await supabase.from("scores").insert(rows);
+
+              router.push(`/summary?roundId=${round.id}`);
             }}
           >
             END

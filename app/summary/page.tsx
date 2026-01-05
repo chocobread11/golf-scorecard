@@ -2,17 +2,43 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 export default function SummaryPage() {
   const [data, setData] = useState<RoundData | null>(null);
+
+  type RoundData = {
+  course: string;
+  totalHoles: number;
+  players: string[];
+  pars: number[];
+  scores: number[][];
+  startTime: number;
+  endTime: number;
+  };
+
   const router = useRouter(); 
 
+  const searchParams = useSearchParams();
+  const roundId = searchParams.get("roundId");
+
   useEffect(() => {
+  if (!roundId) {
+    router.push("/");
+    return;
+  }
+
+  const fetchSummary = async () => {
+    // fetch round + scores from DB (same logic as FullScore)
+    // OR temporarily fetch from sessionStorage IF YOU MUST
     const stored = sessionStorage.getItem("roundData");
     if (stored) {
       setData(JSON.parse(stored));
     }
-  }, []);
+  };
+
+  fetchSummary();
+  }, [roundId, router]);
 
   if (!data) {
     return (
@@ -27,28 +53,6 @@ export default function SummaryPage() {
   );
 
   const parTotal = data.pars.reduce((a, b) => a + b, 0);
-
-  type RoundData = {
-  course: string;
-  totalHoles: number;
-  players: string[];
-  pars: number[];
-  scores: number[][];
-  startTime: number;
-  endTime: number;
-};
-
-// Helper to format duration
-function formatDuration(ms: number) {
-  const totalMinutes = Math.floor(ms / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  return hours > 0
-    ? `${hours}h ${minutes}m`
-    : `${minutes}m`;
-}
-
 
   return (
     <main className="min-h-screen px-6 py-4">
@@ -102,7 +106,7 @@ function formatDuration(ms: number) {
       <div className="space-y-4 mt-4">
         <button
           className="w-full py-4 border rounded-md font-bold"
-          onClick={() => router.push("/fullScore")}
+          onClick={() => router.push(`/fullScore?roundId=${roundId}`)}
         >
           VIEW FULL SCORECARD
         </button>

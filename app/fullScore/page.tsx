@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toPng } from "html-to-image";
 import { useRef } from "react";
-
+import { getRoundDateInfo } from "@/lib/date";
+import { useSearchParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 type RoundData = {
   course: string;
@@ -79,23 +81,89 @@ function ScoreBadge({
   return <span className="font-semibold">{score}</span>;
 }
 
-
 export default function FullScorePage() {
   const router = useRouter();
   const [data, setData] = useState<RoundData | null>(null);
-
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const searchParams = useSearchParams();
+  const roundId = searchParams.get("roundId");
+
   useEffect(() => {
-    const raw = sessionStorage.getItem("roundData");
-    if (!raw) {
+  if (!roundId) {
+    router.push("/");
+    return;
+  }
+
+  const fetchRound = async () => {
+    // 1️⃣ Fetch round
+    const { data: round, error: roundError } = await supabase
+      .from("rounds")
+      .select("*")
+      .eq("id", roundId)
+      .single();
+
+    if (roundError || !round) {
+      console.error("Failed to fetch round:", roundError);
       router.push("/");
       return;
     }
-    setData(JSON.parse(raw));
-  }, [router]);
 
-  if (!data) return null;
+    // 2️⃣ Fetch scores
+    const { data: scores, error: scoresError } = await supabase
+      .from("scores")
+      .select("*")
+      .eq("round_id", roundId)
+      .order("hole_number");
+
+    if (scoresError) {
+      console.error("Failed to fetch scores:", scoresError);
+      return;
+    }
+
+    // 3️⃣ Transform DB data → RoundData shape
+    const players = Array.from(
+      new Set(scores.map((s) => s.golfer_name))
+    );
+
+    const totalHoles = round.total_holes;
+    const pars: number[] = [];
+    const scoreGrid: (number | null)[][] = Array.from(
+      { length: totalHoles },
+      () => players.map(() => null)
+    );
+
+    scores.forEach((s) => {
+      const holeIndex = s.hole_number - 1;
+      const playerIndex = players.indexOf(s.golfer_name);
+      pars[holeIndex] = s.par;
+      scoreGrid[holeIndex][playerIndex] = s.strokes;
+    });
+
+    setData({
+      course: round.course_name,
+      totalHoles,
+      players,
+      pars,
+      scores: scoreGrid,
+      startTime: new Date(round.start_time).getTime(),
+      endTime: new Date(round.end_time).getTime(),
+    });
+  };
+
+  fetchRound();
+}, [roundId, router]);
+
+
+  if (!data) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-400">Loading scorecard…</p>
+      </main>
+    );
+  }
+
+  const roundDate = getRoundDateInfo(data.startTime);
 
   // Totals per player
   const playerTotals = data.players.map((_, i) =>
@@ -131,7 +199,7 @@ export default function FullScorePage() {
       {/* HEADER */}
         <div className="flex justify-between items-center mb-2 px-4">
            <button
-          onClick={() => router.push("/summary")}
+          onClick={() => router.push(`/summary?roundId=${roundId}`)}
           className="text-sm text-gray-500 mb-2"
         >
           ← Back
@@ -150,10 +218,12 @@ export default function FullScorePage() {
            <h1 className="text-2xl font-bold text-center">
           Full Scorecard
         </h1>
-        <p className="text-center text-gray-500">
+        <p className="py-2 text-center font-semibold text-xl text-gray-500">
           {data.course}
         </p>
-
+        <p className="text-sm text-center text-gray-400 font-light">
+          {roundDate.day}, {roundDate.date}
+        </p>
         </div>
 
       {/* SCORE TABLE */}
@@ -187,8 +257,8 @@ export default function FullScorePage() {
                       ? s - data.pars[h]
                       : null;
 
-                  return (
-                    <td className="p-2 text-center">
+                   return (
+                    <td key={`${h}-${i}`} className="p-2 text-center">
                       <ScoreBadge score={s} par={data.pars[h]} />
                     </td>
                   );
@@ -213,7 +283,7 @@ export default function FullScorePage() {
       {/* FOOTER ACTIONS */}
       <div className="mt-2 flex gap-4 px-4">
         <button
-          onClick={() => router.push("/summary")}
+          onClick={() => router.push(`/summary?roundId=${roundId}`)}
           className="flex-1 py-3 border rounded-lg font-semibold"
         >
           Summary
