@@ -33,7 +33,7 @@ function ScoreBadge({
   if (diff === -1) {
     return (
       <span
-        className={`${base} border-2 rounded-full`}
+        className={`${base} outline-2 rounded-full`}
       >
         {score}
       </span>
@@ -42,7 +42,7 @@ function ScoreBadge({
   if (diff === 1) {
     return (
       <span
-        className={`${base} border-2`}
+        className={`${base} outline-2`}
       >
         {score}
       </span>
@@ -51,7 +51,7 @@ function ScoreBadge({
   if (diff === -2) {
     return (
       <span
-        className={`${base} border-2 rounded-full outline-2 outline-offset-2 `}
+        className={`${base} border-2 rounded-full outline-2 outline-offset-1 `}
       >
         {score}
       </span>
@@ -60,7 +60,16 @@ function ScoreBadge({
   if (diff === 2) {
     return (
       <span
-        className={`${base} border-2 outline-2 outline-offset-2`}
+        className={`${base} border-2 outline-2 outline-offset-1`}
+      >
+        {score}
+      </span>
+    );
+  }
+  if (diff > 2) {
+    return (
+      <span
+        className={`${base} text-red-600`}
       >
         {score}
       </span>
@@ -150,7 +159,7 @@ export default function FullScorePage() {
       {/* SCORE TABLE */}
       <div className="overflow-x-auto border rounded-lg">
         <table className="min-w-full text-sm border-collapse">
-          <thead className="bg-gray-100 sticky top-0 z-10">
+          <thead className="bg-gray-100 dark:bg-gray-900 sticky top-0 z-10">
             <tr>
               <th className="p-2 text-center">Hole</th>
               <th className="p-2 text-center">Par</th>
@@ -188,9 +197,9 @@ export default function FullScorePage() {
             ))}
 
             {/* TOTAL ROW */}
-            <tr className="border-t bg-gray-50 font-bold">
-              <td className="p-2">TOTAL</td>
-              <td className="p-2">{parTotal}</td>
+            <tr className="border-t bg-gray-50 dark:bg-gray-600 font-bold">
+              <td className="p-2 text-center">TOTAL</td>
+              <td className="p-2 text-center">{parTotal}</td>
               {playerTotals.map((t, i) => (
                 <td key={i} className="p-2 text-center">
                   {t}

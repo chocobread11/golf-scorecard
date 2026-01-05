@@ -106,6 +106,12 @@ function formatDuration(ms: number) {
         >
           VIEW FULL SCORECARD
         </button>
+        <button
+          className="w-full py-4 border rounded-md font-bold border-red-500 text-red-500"
+          onClick={() => router.push("/")}
+        >
+          NEW ROUND
+        </button>
       </div>
     </main>
   );
