@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import FullScoreClient from "./fullScore-client";
+import FullScoreClient from "./fullscore-client";
 
 export default function FullScorePage() {
   return (
