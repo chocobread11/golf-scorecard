@@ -7,6 +7,8 @@ import { useRef } from "react";
 import { getRoundDateInfo } from "@/lib/date";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { ChevronLeft } from "lucide-react";
+import { Download } from "lucide-react";
 
 type RoundData = {
   course: string;
@@ -78,7 +80,7 @@ function ScoreBadge({
     );
   }
 
-  return <span className="font-semibold">{score}</span>;
+  return <span className={`${base}`}>{score}</span>;
 }
 
 export default function FullScorePage() {
@@ -88,6 +90,8 @@ export default function FullScorePage() {
 
   const searchParams = useSearchParams();
   const roundId = searchParams.get("roundId");
+
+  const cellClass = "px-2 py-2 text-center";
 
   useEffect(() => {
   if (!roundId) {
@@ -200,20 +204,19 @@ export default function FullScorePage() {
         <div className="flex justify-between items-center mb-2 px-4">
            <button
           onClick={() => router.push(`/summary?roundId=${roundId}`)}
-          className="text-sm text-gray-500 mb-2"
-        >
-          ← Back
+          className="p-2">
+            <ChevronLeft size={30} /> 
         </button>
         <button
         onClick={exportAsImage}
-        className="text-sm px-3 py-2 font-semibold active:bg-gray-100"
+        className="px-3 py-2 font-semibold active:bg-gray-100"
         >
-          Save Image
+        <Download size={26} className="" />
         </button>
         </div>
       
       {/* FULL IMAGE SCORECARD */}
-      <div ref={cardRef} className="px-4 py-4">
+      <div ref={cardRef} className="px-4 pb-4">
         <div className="mb-4">
            <h1 className="text-2xl font-bold text-center">
           Full Scorecard
@@ -228,15 +231,15 @@ export default function FullScorePage() {
 
       {/* SCORE TABLE */}
       <div className="overflow-x-auto border rounded-lg">
-        <table className="min-w-full text-sm border-collapse">
+        <table className="w-full table-fixed text-sm border-collapse">
           <thead className="bg-gray-100 dark:bg-gray-900 sticky top-0 z-10">
             <tr>
-              <th className="p-2 text-center">Hole</th>
-              <th className="p-2 text-center">Par</th>
+              <th className={cellClass}>Hole</th>
+              <th className={cellClass}>Par</th>
               {data.players.map((p) => (
                 <th
                   key={p}
-                  className="p-2 text-center whitespace-nowrap"
+                  className={cellClass}
                 >
                   {p}
                 </th>
@@ -247,8 +250,8 @@ export default function FullScorePage() {
           <tbody>
             {Array.from({ length: data.totalHoles }).map((_, h) => (
               <tr key={h} className="border-t">
-                <td className="p-2 text-center">{h + 1}</td>
-                <td className="p-2 text-center">{data.pars[h]}</td>
+                <td className={cellClass}>{h + 1}</td>
+                <td className={cellClass}>{data.pars[h]}</td>
 
                 {data.players.map((_, i) => {
                   const s = data.scores[h][i];
@@ -258,7 +261,7 @@ export default function FullScorePage() {
                       : null;
 
                    return (
-                    <td key={`${h}-${i}`} className="p-2 text-center">
+                    <td key={`${h}-${i}`} className={cellClass}>
                       <ScoreBadge score={s} par={data.pars[h]} />
                     </td>
                   );
@@ -268,10 +271,10 @@ export default function FullScorePage() {
 
             {/* TOTAL ROW */}
             <tr className="border-t bg-gray-50 dark:bg-gray-600 font-bold">
-              <td className="p-2 text-center">TOTAL</td>
-              <td className="p-2 text-center">{parTotal}</td>
+              <td className={cellClass}>TOTAL</td>
+              <td className={cellClass}>{parTotal}</td>
               {playerTotals.map((t, i) => (
-                <td key={i} className="p-2 text-center">
+                <td key={i} className={cellClass}>
                   {t}
                 </td>
               ))}

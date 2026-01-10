@@ -4,6 +4,10 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from '@/lib/supabase';
+import { ChevronLeft } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { FlagTriangleRight } from "lucide-react";
 
 export default function RoundPage() {
   const router = useRouter();
@@ -36,9 +40,8 @@ export default function RoundPage() {
         <div>
             <button
                 onClick={() => router.push("/")}
-                className="mb-6 text-sm text-gray-500 active-underline"
-                >
-                ← Back
+                className="mb-6 text-sm text-gray-500"
+                ><ChevronLeft size={30} /> 
                 </button>
         <h1 className="text-2xl font-semibold text-center mb-10">
           Round Setup
@@ -120,7 +123,7 @@ export default function RoundPage() {
       </div>
 
       <div>
-        <p className="text-3xl font-semibold text-center mb-4 cursor-pointer" 
+        <p className="text-3xl font-semibold text-center mb-4" 
           onClick={() => {
               const value = prompt("Par:");
               const v = Number(value);
@@ -128,7 +131,8 @@ export default function RoundPage() {
                 const next = [...pars];
                 next[holeIndex] = v;
                 setPars(next);
-              }}}>PAR {pars[holeIndex]}</p>
+              }}}>PAR {pars[holeIndex]}  <ChevronDown size={20} className="inline-block -mt-1 -ml-2 text-gray-500" /></p>
+              
       </div>
 
       {/* SCORES */}
@@ -158,7 +162,7 @@ export default function RoundPage() {
       {/* NAV */}
         <div className="pb-6 flex justify-between">
             <button
-                className="py-3 w-24 border rounded-md"
+                className="flex justify-center p-4 border-2 rounded-full"
                 onClick=
               {() => {
                     if (currentHole === 1) {
@@ -168,19 +172,19 @@ export default function RoundPage() {
                     }
                 }}
             >
-                ← PREV
+            <ChevronLeft size={30} />
             </button>
 
         {currentHole < totalHoles ? (
             <button
-            className="py-3 w-24 border rounded-md"
+            className="flex justify-center p-4 border-2 rounded-full"
             onClick={() => setCurrentHole((h) => h + 1)}
             >
-            NEXT →
+            <ChevronRight size={30} />
             </button>
         ) : (
             <button
-            className="py-3 w-24 border rounded-md"
+            className="flex justify-center p-4 border-2 rounded-full text-2xl"
             onClick={async () => {
               const ok = window.confirm(
                 "End this round and go to summary?"
@@ -254,8 +258,8 @@ export default function RoundPage() {
 
               router.push(`/summary?roundId=${round.id}`);
             }}
-          >
-            END
+          > END
+            <FlagTriangleRight size={26} className="mt-1" />
           </button>
         )}
         </div>
