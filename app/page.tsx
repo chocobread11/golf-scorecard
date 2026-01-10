@@ -28,7 +28,6 @@ export default function HomePage() {
       .select("id, course_name, total_holes, start_time")
       .eq("user_id", user.id)
       .order("start_time", { ascending: false })
-      .limit(5);
 
     if (error) {
       console.error("Failed to fetch rounds:", error);
@@ -48,8 +47,8 @@ export default function HomePage() {
   }
 
   return (
-    <main className="h-screen flex flex-col px-6 select-none">
-
+    <main className="h-screen overflow-y-scroll snap-y px-6 select-none">
+      
       <div className="pt-8">
       <h1 className="text-8xl font-semibold text-center mb-10">
         Start a Round
@@ -75,21 +74,22 @@ export default function HomePage() {
       </div>
       </div>
 
-      <div className="flex flex-col mt-12 flex-1 overflow-hidden">
-        <p className="text-3xl font-bold text-center">History</p>
-        <div className="mt-4 flex-1 overflow-y-auto space-y-3">
+      <div className="flex flex-col h-screen mt-12 flex-1 snap-y">
+        <p className="text-3xl font-bold text-center snap-start">History</p>
+        <div className="mt-2 flex-1 overflow-y-auto space-y-3">
 
         {!user && (
           <p className="text-sm font-semibold underline text-center mb-4">
-            sign in to save
+            sign in to save your round
           </p>
         )}
 
         {!user ? (
-          <button
+            <button
             onClick={signInWithGoogle}
-            className="w-full py-3 border rounded-lg font-semibold"
+            className="w-full flex items-center justify-center py-2 border rounded-lg font-semibold"
           >
+            <img src="/googlepic.png" alt="google" className="mr-2 w-10 h-10" />
             Sign in with Google
           </button>
         ) : (
@@ -100,7 +100,7 @@ export default function HomePage() {
 
             <button
               onClick={signOut}
-              className="w-full py-2 border rounded-lg font-semibold mb-4"
+              className="w-full py-2 border rounded-lg font-semibold mb-4 bg-gray-300"
             >
               Sign out
             </button>
