@@ -49,7 +49,7 @@ export default function HomePage() {
   return (
     <main className="h-screen overflow-y-scroll snap-y px-6 select-none">
       
-      <div className="pt-8">
+      <div className="pt-8 snap-end">
       <h1 className="text-8xl font-semibold text-center mb-10">
         Start a Round
       </h1>
@@ -89,7 +89,7 @@ export default function HomePage() {
             onClick={signInWithGoogle}
             className="w-full flex items-center justify-center py-2 border rounded-lg font-semibold"
           >
-            <img src="/googlepic.png" alt="google" className="mr-2 w-10 h-10" />
+            <img src="/googlelogo1.png" alt="google" className="mr-2 w-10 h-10 rounded-full" />
             Sign in with Google
           </button>
         ) : (

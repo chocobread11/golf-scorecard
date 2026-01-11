@@ -25,17 +25,24 @@ export default function RoundPage() {
 
   // PLAY STATE
   const [currentHole, setCurrentHole] = useState(1);
-  const [pars, setPars] = useState(Array(totalHoles).fill(4));
-  const [scores, setScores] = useState(
+  const [pars, setPars] = useState<number[]>(() =>
+    Array(totalHoles).fill(4)
+  );
+  const [scores, setScores] = useState<(number | null)[][]>(() =>
     Array.from({ length: totalHoles }, () => Array(4).fill(null))
   );
+
+
+  // EDITING STATE
+  const [editingPlayer, setEditingPlayer] = useState<number | null>(null);
+  const [editingPar, setEditingPar] = useState(false);
 
   const activePlayers = players.filter(Boolean);
 
   /* ---------------- SETUP SCREEN ---------------- */
   if (!roundStarted) {
     return (
-      <main className="h-screen flex flex-col justify-center px-6 select-none">
+      <main className="h-screen flex flex-col px-6 select-none">
         
         <div>
             <button
@@ -81,13 +88,18 @@ export default function RoundPage() {
         </div>
 
         <button
-          className="w-full py-4 text-lg font-bold border border-gray-300
+          className="w-full mt-10 py-4 text-lg font-bold border border-gray-300
                      rounded-md active:bg-gray-100"
           onClick={() => {
                 const start = Date.now();
                 setStartTime(start);
                 setRoundStarted(true);
-            }}
+            if (!course.trim()) {
+              alert("Please enter course name");
+              return;
+            }
+
+              }}
         >
           START ROUND
         </button>
@@ -122,42 +134,84 @@ export default function RoundPage() {
         </div>
       </div>
 
-      <div>
-        <p className="text-3xl font-semibold text-center mb-4" 
-          onClick={() => {
-              const value = prompt("Par:");
-              const v = Number(value);
+      {/* PAR SELECTOR */}
+      <div className="flex justify-center text-center mb-4">
+        <p className="font-semibold text-3xl px-2">PAR</p>
+        {editingPar ? (
+          <input
+            type="number"
+            inputMode="numeric"
+            autoFocus
+            min={1}
+            max={6}
+            className="text-3xl font-semibold text-center border rounded w-24"
+            value={pars[holeIndex]}
+            onChange={(e) => {
+              const v = Number(e.target.value);
               if (!isNaN(v)) {
                 const next = [...pars];
                 next[holeIndex] = v;
                 setPars(next);
-              }}}>PAR {pars[holeIndex]}  <ChevronDown size={20} className="inline-block -mt-1 -ml-2 text-gray-500" /></p>
-              
+              }
+            }}
+            onBlur={() => setEditingPar(false)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") setEditingPar(false);
+            }}
+          />
+        ) : (
+          <button
+            onClick={() => setEditingPar(true)}
+            className="text-3xl font-semibold inline-flex items-center gap-1"
+          >
+            {pars[holeIndex]}
+            <ChevronDown size={20} className="text-gray-500" />
+          </button>
+        )}
       </div>
 
+      
       {/* SCORES */}
       <div className="flex-1 flex flex-col justify-center space-y-6">
         {activePlayers.map((name, i) => (
           <div
             key={i}
             className="flex justify-between items-center text-2xl font-semibold"
-            onClick={() => {
-              const value = prompt("Score:");
-              const v = Number(value);
-              if (!isNaN(v)) {
-                const next = [...scores];
-                next[holeIndex][i] = v;
-                setScores(next);
-              }
-            }}
           >
-            <span>{name.toUpperCase()}</span>
-            <span className="text-4xl">
+        <span>{name.toUpperCase()}</span>
+
+        {editingPlayer === i ? (
+            <input
+              type="number"
+              inputMode="numeric"
+              autoFocus
+              className="w-20 text-4xl text-center border rounded"
+              value={scores[holeIndex][i] ?? ""}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                if (!isNaN(v)) {
+                  const next = [...scores];
+                  next[holeIndex][i] = v;
+                  setScores(next);
+                }
+              }}
+              onBlur={() => setEditingPlayer(null)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") setEditingPlayer(null);
+              }}
+            />
+          ) : (
+            <button
+              onClick={() => setEditingPlayer(i)}
+              className="text-4xl min-w-[3rem] text-center"
+            >
               {scores[holeIndex][i] ?? "-"}
-            </span>
-          </div>
-        ))}
-      </div>
+            </button>
+          )}
+            </div>
+          ))}
+        </div>
+
 
       {/* NAV */}
         <div className="pb-6 flex justify-between">
