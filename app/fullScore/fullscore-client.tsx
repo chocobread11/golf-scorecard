@@ -27,12 +27,12 @@ function ScoreBadge({
   score: number | null;
   par: number;
 }) {
-  if (score === null) return <span className="text-gray-400">-</span>;
+  if (score === null) return <span className="text-gray-700">-</span>;
 
   const diff = score - par;
 
   const base =
-    "inline-flex items-center justify-center w-8 h-8 text-sm font-bold";
+  "inline-flex items-center justify-center w-8 h-8 text-sm font-bold text-gray-900 dark:text-gray-100";
 
   if (diff === -1) {
     return (
@@ -88,19 +88,33 @@ export default function FullScorePage() {
   const [data, setData] = useState<RoundData | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const cellClass ="px-2 py-2 text-center font-medium text-gray-900 dark:text-gray-100";// consistent cell styling
+
   const searchParams = useSearchParams();
   const roundId = searchParams.get("roundId");
 
-  const cellClass = "px-2 py-2 text-center";
-
   useEffect(() => {
-  if (!roundId) {
-    router.push("/");
-    return;
-  }
+  const load = async () => {
+    // CASE 1: DB round
+    if (roundId) {
+      await fetchFromDatabase(roundId);
+      return;
+    }
 
-  const fetchRound = async () => {
-    // 1️⃣ Fetch round
+    // CASE 2: sessionStorage round
+    const stored = sessionStorage.getItem("roundData");
+    if (!stored) {
+      router.push("/");
+      return;
+    }
+
+    setData(JSON.parse(stored));
+  };
+
+  load();
+}, [roundId, router]);
+
+  const fetchFromDatabase = async (roundId: string) => {
     const { data: round, error: roundError } = await supabase
       .from("rounds")
       .select("*")
@@ -108,45 +122,36 @@ export default function FullScorePage() {
       .single();
 
     if (roundError || !round) {
-      console.error("Failed to fetch round:", roundError);
       router.push("/");
       return;
     }
 
-    // 2️⃣ Fetch scores
     const { data: scores, error: scoresError } = await supabase
       .from("scores")
       .select("*")
       .eq("round_id", roundId)
       .order("hole_number");
 
-    if (scoresError) {
-      console.error("Failed to fetch scores:", scoresError);
-      return;
-    }
+    if (scoresError || !scores) return;
 
-    // 3️⃣ Transform DB data → RoundData shape
-    const players = Array.from(
-      new Set(scores.map((s) => s.golfer_name))
-    );
+    const players = Array.from(new Set(scores.map(s => s.golfer_name)));
 
-    const totalHoles = round.total_holes;
     const pars: number[] = [];
-    const scoreGrid: (number | null)[][] = Array.from(
-      { length: totalHoles },
+    const scoreGrid = Array.from(
+      { length: round.total_holes },
       () => players.map(() => null)
     );
 
     scores.forEach((s) => {
-      const holeIndex = s.hole_number - 1;
-      const playerIndex = players.indexOf(s.golfer_name);
-      pars[holeIndex] = s.par;
-      scoreGrid[holeIndex][playerIndex] = s.strokes;
+      const h = s.hole_number - 1;
+      const p = players.indexOf(s.golfer_name);
+      pars[h] = s.par;
+      scoreGrid[h][p] = s.strokes;
     });
 
     setData({
       course: round.course_name,
-      totalHoles,
+      totalHoles: round.total_holes,
       players,
       pars,
       scores: scoreGrid,
@@ -155,14 +160,10 @@ export default function FullScorePage() {
     });
   };
 
-  fetchRound();
-}, [roundId, router]);
-
-
   if (!data) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-400">Loading scorecard…</p>
+        <p className="text-gray-400 dark:text-gray-700">Loading scorecard…</p>
       </main>
     );
   }
@@ -185,7 +186,6 @@ export default function FullScorePage() {
   const dataUrl = await toPng(cardRef.current, {
     cacheBust: true,
     pixelRatio: 2, // sharper
-    backgroundColor: "#ffffff",
     style: {
       width: "390px",  // 9:16 phone width
       height: "780px", // 9:16 phone height
@@ -196,17 +196,20 @@ export default function FullScorePage() {
   link.download = "golf-scorecard.png";
   link.href = dataUrl;
   link.click();
-};
+  };
 
   return (
     <main className="min-h-screen py-6 select-none">
       {/* HEADER */}
         <div className="flex justify-between items-center mb-2 px-4">
-           <button
-          onClick={() => router.push(`/summary?roundId=${roundId}`)}
+          <button
+          onClick={() => {
+            if (roundId) router.push(`/summary?roundId=${roundId}`);
+            else router.push("/summary");
+          }}
           className="p-2">
-            <ChevronLeft size={30} /> 
-        </button>
+          <ChevronLeft size={30} /> 
+          </button>
         <button
         onClick={exportAsImage}
         className="px-3 py-2 font-semibold active:bg-gray-100"
@@ -218,21 +221,21 @@ export default function FullScorePage() {
       {/* FULL IMAGE SCORECARD */}
       <div ref={cardRef} className="px-4 pb-4">
         <div className="mb-4">
-           <h1 className="text-2xl font-bold text-center">
+           <h1 className="text-2xl font-bold text-center text-gray-800 dark:text-gray-200">
           Full Scorecard
         </h1>
         <p className="py-2 text-center font-semibold text-xl text-gray-500">
           {data.course}
         </p>
-        <p className="text-sm text-center text-gray-400 font-light">
+        <p className="text-sm text-center text-gray-500 font-light">
           {roundDate.day}, {roundDate.date}
         </p>
         </div>
 
       {/* SCORE TABLE */}
-      <div className="overflow-x-auto border rounded-lg">
+      <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
         <table className="w-full table-fixed text-sm border-collapse">
-          <thead className="bg-gray-100 dark:bg-gray-900 sticky top-0 z-10">
+          <thead className="bg-slate-500 text-white sticky top-0 z-10">
             <tr>
               <th className={cellClass}>Hole</th>
               <th className={cellClass}>Par</th>
@@ -249,7 +252,7 @@ export default function FullScorePage() {
 
           <tbody>
             {Array.from({ length: data.totalHoles }).map((_, h) => (
-              <tr key={h} className="border-t">
+              <tr key={h} className="border-t border-gray-300 dark:border-gray-600">
                 <td className={cellClass}>{h + 1}</td>
                 <td className={cellClass}>{data.pars[h]}</td>
 

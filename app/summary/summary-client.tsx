@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSearchParams } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { signInWithGoogle } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 
 export default function SummaryPage() {
   const [data, setData] = useState<RoundData | null>(null);
@@ -17,28 +19,20 @@ export default function SummaryPage() {
   endTime: number;
   };
 
-  const router = useRouter(); 
-
-  const searchParams = useSearchParams();
-  const roundId = searchParams.get("roundId");
+  const { user, loading } = useAuth();
+  const [saving, setSaving] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-  if (!roundId) {
+  const stored = sessionStorage.getItem("roundData");
+
+  if (!stored) {
     router.push("/");
     return;
   }
 
-  const fetchSummary = async () => {
-    // fetch round + scores from DB (same logic as FullScore)
-    // OR temporarily fetch from sessionStorage IF YOU MUST
-    const stored = sessionStorage.getItem("roundData");
-    if (stored) {
-      setData(JSON.parse(stored));
-    }
-  };
-
-  fetchSummary();
-  }, [roundId, router]);
+  setData(JSON.parse(stored));
+  }, [router]);
 
   if (!data) {
     return (
@@ -103,19 +97,105 @@ export default function SummaryPage() {
         </div>
 
       {/* ACTIONS */}
-      <div className="space-y-4 mt-4">
+      <div >
+        <div className="space-y-4 mt-4">
+
+        {!user && !loading && (
+          <button
+            className="w-full py-4 border rounded-md font-bold"
+            onClick={signInWithGoogle}
+          >
+            <img
+              src="/googlelogo1.png"
+              alt="google"
+              className="inline-block w-6 h-6 mr-2 rounded-full align-middle"
+            />
+            Sign in to save this round
+          </button>
+        )}
+
+        {user && (
+          <button
+            disabled={saving}
+            className="w-full py-4 border rounded-md font-bold"
+            onClick={async () => {
+              if (!data) return;
+
+              setSaving(true);
+
+              const { data: round, error } = await supabase
+                .from("rounds")
+                .insert({
+                  user_id: user.id,
+                  course_name: data.course,
+                  total_holes: data.totalHoles,
+                  start_time: new Date(data.startTime).toISOString(),
+                  end_time: new Date(data.endTime).toISOString(),
+                })
+                .select()
+                .single();
+
+              if (error || !round) {
+                alert("Failed to save round");
+                setSaving(false);
+                return;
+              }
+
+              const rows: any[] = [];
+
+              data.scores.forEach((holeScores, h) => {
+                holeScores.forEach((s, i) => {
+                  if (s !== null) {
+                    rows.push({
+                      round_id: round.id,
+                      hole_number: h + 1,
+                      par: data.pars[h],
+                      golfer_name: data.players[i],
+                      strokes: s,
+                    });
+                  }
+                });
+              });
+
+              await supabase.from("scores").insert(rows);
+
+              sessionStorage.removeItem("roundData");
+
+              router.push(`/fullScore?roundId=${round.id}`);
+            }}
+          >
+            {saving ? "Saving..." : "Save round to account"}
+          </button>
+        )}
+
         <button
-          className="w-full py-4 border rounded-md font-bold"
-          onClick={() => router.push(`/fullScore?roundId=${roundId}`)}
-        >
-          VIEW FULL SCORECARD
+        className="w-full py-4 border rounded-md font-bold"
+        onClick={() => router.push("/fullScore")}
+         > FULL SCORECARD
         </button>
-        <button
-          className="w-full py-4 border rounded-md font-bold border-red-500 text-red-500"
-          onClick={() => router.push("/")}
-        >
-          NEW ROUND
-        </button>
+
+        {!user ? (
+          <button
+            className="w-full py-4 border rounded-md font-bold border-black bg-red-500 text-white"
+            onClick={async () => {
+              const ok = window.confirm("Permanently delete this round?");
+              if (!ok) return;
+
+              sessionStorage.removeItem("roundData");
+              router.push("/");
+            }}
+          >
+            NEW ROUND
+          </button>
+        ) : (
+          <button
+            className="w-full py-4 border rounded-md font-bold border-red-500 text-red-500"
+            onClick={() => router.push("/")}
+          >
+            NEW ROUND
+          </button>
+        )}
+      </div>
       </div>
     </main>
   );

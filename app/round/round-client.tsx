@@ -3,7 +3,6 @@
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from '@/lib/supabase';
 import { ChevronLeft } from "lucide-react";
 import { ChevronRight } from "lucide-react";
 import { ChevronDown } from "lucide-react";
@@ -25,19 +24,13 @@ export default function RoundPage() {
 
   // PLAY STATE
   const [currentHole, setCurrentHole] = useState(1);
-  const [pars, setPars] = useState<number[]>(() =>
-    Array(totalHoles).fill(4)
-  );
+  const [pars, setPars] = useState<number[]>(() => Array(totalHoles).fill(4));
   const [scores, setScores] = useState<(number | null)[][]>(() =>
-    Array.from({ length: totalHoles }, () => Array(4).fill(null))
-  );
-
+  Array.from({ length: totalHoles }, () => Array(4).fill(null)));
 
   // EDITING STATE
   const [editingPlayer, setEditingPlayer] = useState<number | null>(null);
   const [editingPar, setEditingPar] = useState(false);
-
-  const activePlayers = players.filter(Boolean);
 
   /* ---------------- SETUP SCREEN ---------------- */
   if (!roundStarted) {
@@ -91,15 +84,18 @@ export default function RoundPage() {
           className="w-full mt-10 py-4 text-lg font-bold border border-gray-300
                      rounded-md active:bg-gray-100"
           onClick={() => {
-                const start = Date.now();
-                setStartTime(start);
-                setRoundStarted(true);
             if (!course.trim()) {
               alert("Please enter course name");
               return;
             }
-
-              }}
+            if (!players.some(p => p.trim())) {
+              alert("Enter at least one player");
+              return;
+            }
+              const start = Date.now();
+              setStartTime(start);
+              setRoundStarted(true);
+            }}
         >
           START ROUND
         </button>
@@ -142,7 +138,7 @@ export default function RoundPage() {
             type="number"
             inputMode="numeric"
             autoFocus
-            min={1}
+            min={3}
             max={6}
             className="text-3xl font-semibold text-center border rounded w-24"
             value={pars[holeIndex]}
@@ -173,61 +169,64 @@ export default function RoundPage() {
       
       {/* SCORES */}
       <div className="flex-1 flex flex-col justify-center space-y-6">
-        {activePlayers.map((name, i) => (
-          <div
-            key={i}
-            className="flex justify-between items-center text-2xl font-semibold"
-          >
-        <span>{name.toUpperCase()}</span>
+        {players.map((name, i) => {
+          if (!name) return null; // skip empty slots but keep index alignment
 
-        {editingPlayer === i ? (
-            <input
-              type="number"
-              inputMode="numeric"
-              autoFocus
-              className="w-20 text-4xl text-center border rounded"
-              value={scores[holeIndex][i] ?? ""}
-              onChange={(e) => {
-                const v = Number(e.target.value);
-                if (!isNaN(v)) {
-                  const next = [...scores];
-                  next[holeIndex][i] = v;
-                  setScores(next);
-                }
-              }}
-              onBlur={() => setEditingPlayer(null)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") setEditingPlayer(null);
-              }}
-            />
-          ) : (
-            <button
-              onClick={() => setEditingPlayer(i)}
-              className="text-4xl min-w-[3rem] text-center"
+          return (
+            <div
+              key={i}
+              className="flex justify-between items-center text-2xl font-semibold"
             >
-              {scores[holeIndex][i] ?? "-"}
-            </button>
-          )}
-            </div>
-          ))}
-        </div>
+              <span>{name.toUpperCase()}</span>
 
+              {editingPlayer === i ? (
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  autoFocus
+                  className="w-20 text-4xl text-center border rounded"
+                  value={scores[holeIndex][i] ?? ""}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (!isNaN(v)) {
+                      const next = [...scores];
+                      next[holeIndex][i] = v;
+                      setScores(next);
+                    }
+                  }}
+                  onBlur={() => setEditingPlayer(null)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") setEditingPlayer(null);
+                  }}
+                />
+              ) : (
+                <button
+                  onClick={() => setEditingPlayer(i)}
+                  className="text-4xl min-w-12 text-center"
+                >
+                  {scores[holeIndex][i] ?? "-"}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       {/* NAV */}
         <div className="pb-6 flex justify-between">
-            <button
-                className="flex justify-center p-4 border-2 rounded-full"
-                onClick=
+          <button
+            className="flex justify-center p-4 border-2 rounded-full"
+              onClick=
               {() => {
-                    if (currentHole === 1) {
-                      setRoundStarted(false);
-                    } else {
-                      setCurrentHole((h) => h - 1);
-                    }
-                }}
-            >
-            <ChevronLeft size={30} />
-            </button>
+                  if (currentHole === 1) {
+                    setRoundStarted(false);
+                  } else {
+                    setCurrentHole((h) => h - 1);
+                  }
+              }}
+          >
+          <ChevronLeft size={30} />
+          </button>
 
         {currentHole < totalHoles ? (
             <button
@@ -253,71 +252,20 @@ export default function RoundPage() {
                 JSON.stringify({
                   course,
                   totalHoles,
-                  players: activePlayers,
+                  players,
                   pars,
                   scores,
                   startTime: startTime ?? end, // fallback safety
                   endTime: end,
                 })
               );
-
-              const {
-                  data: { user },
-                } = await supabase.auth.getUser();
-
-                if (!user) {
-                  alert("Please sign in to save your round");
-                  return;
-                }
-
-                const { data: round, error } = await supabase
-                .from("rounds")
-                .insert({
-                  user_id: user.id,
-                  course_name: course,
-                  total_holes: totalHoles,
-                  start_time: new Date(startTime!).toISOString(),
-                  end_time: new Date(end).toISOString(),
-                })
-                .select()
-                .single();
-
-                if (error?.code === "23505") {
-                  console.log("Duplicate round prevented");
-                }
-
-                if (error || !round) {
-                  console.error("Round insert error:", error);
-                  alert("Failed to save round");
-                  return;
-                }
-
-                const rows:any[] = [];
-
-                scores.forEach((holeScores, h) => {
-                  holeScores.forEach((s, i) => {
-                    if (s !== null) {
-                      rows.push({
-                        round_id: round.id,
-                        hole_number: h + 1,
-                        par: pars[h],
-                        golfer_name: players[i],
-                        strokes: s,
-                      });
-                    }
-                  });
-                });
-
-                await supabase.from("scores").insert(rows);
-
-              router.push(`/summary?roundId=${round.id}`);
-            }}
+              router.push(`/summary`);
+            }}  
           > END
-            <FlagTriangleRight size={26} className="mt-1" />
+          <FlagTriangleRight size={26} className="mt-1" />
           </button>
         )}
         </div>
-
     </main>
   );
 }
