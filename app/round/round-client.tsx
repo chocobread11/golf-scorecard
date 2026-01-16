@@ -35,8 +35,8 @@ export default function RoundPage() {
   /* ---------------- SETUP SCREEN ---------------- */
   if (!roundStarted) {
     return (
-      <main className="h-screen flex flex-col px-6 select-none">
-        
+      <main className="h-screen flex px-6 justify-center select-none">
+        <div className="max-w-md min-w-sm p-6">
         <div>
             <button
                 onClick={() => router.push("/")}
@@ -99,6 +99,7 @@ export default function RoundPage() {
         >
           START ROUND
         </button>
+        </div>
       </main>
     );
   }
@@ -108,8 +109,9 @@ export default function RoundPage() {
   const holeIndex = currentHole - 1;
 
   return (
-    <main className="h-screen flex flex-col px-6 select-none">
-      {/* HEADER */}
+    <main className="h-screen flex justify-center px-6 select-none p-6">
+      
+      <div className="max-w-md min-w-sm h-screen p-6 flex flex-col justify-between">
       <div className="pt-6 mb-6 flex justify-between items-start">
         <div>
           <p className="text-xl text-gray-500 mt-4">{course}</p>
@@ -247,24 +249,34 @@ export default function RoundPage() {
 
               const end = Date.now();
 
-              sessionStorage.setItem(
-                "roundData",
-                JSON.stringify({
-                  course,
-                  totalHoles,
-                  players,
-                  pars,
-                  scores,
-                  startTime: startTime ?? end, // fallback safety
-                  endTime: end,
-                })
+              //save only non-empty players and their scores
+              const filteredPlayers = players
+              .map(p => p.trim())
+              .filter(p => p.length > 0);
+
+              const filteredScores = scores.map(hole =>
+              hole.filter((_, i) => players[i]?.trim())
               );
+
+              const payload = {
+                course,
+                totalHoles,
+                players: filteredPlayers,
+                pars,
+                scores: filteredScores,
+                startTime: startTime ?? end,
+                endTime: end,
+              };
+
+              console.log("Saving roundData:", payload);
+              sessionStorage.setItem("roundData", JSON.stringify(payload));
               router.push(`/summary`);
             }}  
           > END
           <FlagTriangleRight size={26} className="mt-1" />
           </button>
         )}
+        </div>
         </div>
     </main>
   );

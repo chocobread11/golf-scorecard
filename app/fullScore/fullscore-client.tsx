@@ -32,7 +32,7 @@ function ScoreBadge({
   const diff = score - par;
 
   const base =
-  "inline-flex items-center justify-center w-8 h-8 text-sm font-bold text-gray-900 dark:text-gray-100";
+  "inline-flex items-center justify-center w-8 h-8 text-sm font-bold";
 
   if (diff === -1) {
     return (
@@ -73,7 +73,7 @@ function ScoreBadge({
   if (diff > 2) {
     return (
       <span
-        className={`${base} text-red-600`}
+        className={`${base} text-red-500`}
       >
         {score}
       </span>
@@ -137,6 +137,7 @@ export default function FullScorePage() {
     const players = Array.from(new Set(scores.map(s => s.golfer_name)));
 
     const pars: number[] = [];
+
     const scoreGrid = Array.from(
       { length: round.total_holes },
       () => players.map(() => null)
@@ -199,8 +200,9 @@ export default function FullScorePage() {
   };
 
   return (
-    <main className="min-h-screen py-6 select-none">
+    <main className="min-h-screen flex justify-center p-6 select-none">
       {/* HEADER */}
+      <div className="max-w-md min-w-sm h-screen ">
         <div className="flex justify-between items-center mb-2 px-4">
           <button
           onClick={() => {
@@ -258,11 +260,7 @@ export default function FullScorePage() {
 
                 {data.players.map((_, i) => {
                   const s = data.scores[h][i];
-                  const diff =
-                    typeof s === "number"
-                      ? s - data.pars[h]
-                      : null;
-
+    
                    return (
                     <td key={`${h}-${i}`} className={cellClass}>
                       <ScoreBadge score={s} par={data.pars[h]} />
@@ -294,6 +292,7 @@ export default function FullScorePage() {
         >
           Summary
         </button>
+      </div>
       </div>
     </main>
   );

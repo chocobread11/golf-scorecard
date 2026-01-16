@@ -47,8 +47,8 @@ export default function HomePage() {
   }
 
   return (
-    <main className="h-screen overflow-y-scroll snap-y px-6 select-none">
-      
+    <main className="flex justify-center h-screen ">
+      <div className="w-full max-w-md min-w-sm overflow-y-scroll snap-y px-6 select-none">
       <div className="pt-8 snap-end">
       <h1 className="text-8xl font-semibold text-center mb-10">
         Start a Round
@@ -142,6 +142,7 @@ export default function HomePage() {
         )}
       </div>
       </div>
+    </div>
     </main>
   );
 }

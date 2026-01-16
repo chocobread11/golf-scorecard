@@ -49,7 +49,8 @@ export default function SummaryPage() {
   const parTotal = data.pars.reduce((a, b) => a + b, 0);
 
   return (
-    <main className="min-h-screen px-6 py-4">
+    <main className="min-h-screen flex justify-around">
+      <div className="px-6 py-4 min-h-screen max-w-md min-w-sm">
       <h1 className=" text-2xl font-semibold mb-2 text-center">Summary</h1>
     
        <div>
@@ -195,6 +196,7 @@ export default function SummaryPage() {
             NEW ROUND
           </button>
         )}
+      </div>
       </div>
       </div>
     </main>
