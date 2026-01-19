@@ -9,6 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { ChevronLeft } from "lucide-react";
 import { Download } from "lucide-react";
+import PageContainer from "../component/layout/PageContainer";
 
 type RoundData = {
   course: string;
@@ -200,9 +201,7 @@ export default function FullScorePage() {
   };
 
   return (
-    <main className="min-h-screen flex justify-center p-6 select-none">
-      {/* HEADER */}
-      <div className="max-w-md min-w-sm h-screen ">
+    <PageContainer>
         <div className="flex justify-between items-center mb-2 px-4">
           <button
           onClick={() => {
@@ -293,7 +292,6 @@ export default function FullScorePage() {
           Summary
         </button>
       </div>
-      </div>
-    </main>
+    </PageContainer>
   );
 }

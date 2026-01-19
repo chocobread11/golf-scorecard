@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { signInWithGoogle } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
+import PageContainer from "../component/layout/PageContainer";
 
 export default function SummaryPage() {
   const [data, setData] = useState<RoundData | null>(null);
@@ -49,8 +50,7 @@ export default function SummaryPage() {
   const parTotal = data.pars.reduce((a, b) => a + b, 0);
 
   return (
-    <main className="min-h-screen flex justify-around">
-      <div className="px-6 py-4 min-h-screen max-w-md min-w-sm">
+    <PageContainer >
       <h1 className=" text-2xl font-semibold mb-2 text-center">Summary</h1>
     
        <div>
@@ -198,7 +198,6 @@ export default function SummaryPage() {
         )}
       </div>
       </div>
-      </div>
-    </main>
+    </PageContainer>
   );
 }

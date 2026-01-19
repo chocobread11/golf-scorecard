@@ -7,6 +7,7 @@ import { signInWithGoogle, signOut } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { getRoundDateInfo } from "@/lib/date";
+import PageContainer from "./component/layout/PageContainer";
 
 export default function HomePage() {
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="flex justify-center h-screen ">
+    <main className="flex justify-center p-6">
       <div className="w-full max-w-md min-w-sm overflow-y-scroll snap-y px-6 select-none">
       <div className="pt-8 snap-end">
       <h1 className="text-8xl font-semibold text-center mb-10">

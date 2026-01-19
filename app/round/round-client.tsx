@@ -7,6 +7,7 @@ import { ChevronLeft } from "lucide-react";
 import { ChevronRight } from "lucide-react";
 import { ChevronDown } from "lucide-react";
 import { FlagTriangleRight } from "lucide-react";
+import PageContainer from "../component/layout/PageContainer";
 
 export default function RoundPage() {
   const router = useRouter();
@@ -35,8 +36,7 @@ export default function RoundPage() {
   /* ---------------- SETUP SCREEN ---------------- */
   if (!roundStarted) {
     return (
-      <main className="h-screen flex px-6 justify-center select-none">
-        <div className="max-w-md min-w-sm p-6">
+      <PageContainer>
         <div>
             <button
                 onClick={() => router.push("/")}
@@ -99,8 +99,7 @@ export default function RoundPage() {
         >
           START ROUND
         </button>
-        </div>
-      </main>
+      </PageContainer>
     );
   }
 
@@ -109,9 +108,7 @@ export default function RoundPage() {
   const holeIndex = currentHole - 1;
 
   return (
-    <main className="h-screen flex justify-center px-6 select-none p-6">
-      
-      <div className="max-w-md min-w-sm h-screen p-6 flex flex-col justify-between">
+    <PageContainer>
       <div className="pt-6 mb-6 flex justify-between items-start">
         <div>
           <p className="text-xl text-gray-500 mt-4">{course}</p>
@@ -277,7 +274,6 @@ export default function RoundPage() {
           </button>
         )}
         </div>
-        </div>
-    </main>
+    </PageContainer>
   );
 }
